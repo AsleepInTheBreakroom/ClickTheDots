@@ -15,7 +15,6 @@ public class GameLogic : MonoBehaviour
 
     //Score
     private int score = 0;
-    private int points = 10;
     public TMP_Text score_text;
 
     //Game Timer
@@ -49,7 +48,7 @@ public class GameLogic : MonoBehaviour
             return;
         }
         //game_timer_text.text = "Timer:" + game_timer.ToString();
-        game_timer_text.text = $"Timer: {game_timer.ToString()}";
+        game_timer_text.text = $"Timer: {Mathf.Floor(game_timer).ToString()}";
 
         //***Clicking a Dot***
         if (Input.GetMouseButton(0))
@@ -57,11 +56,16 @@ public class GameLogic : MonoBehaviour
             Vector2 world_point = cam.ScreenToWorldPoint(Input.mousePosition);
             RaycastHit2D hit = Physics2D.Raycast(world_point, Vector2.zero);
 
-            if(hit.collider != null)
+            if(hit.collider != null && !hit.collider.gameObject.GetComponent<Dot>().audio_source.isPlaying)
             {
-                Destroy(hit.collider.gameObject);
+                hit.collider.gameObject.GetComponent<Dot>().audio_source.Play();
 
-                score += points;
+                hit.collider.gameObject.GetComponent<SpriteRenderer>().enabled = false;
+                hit.collider.gameObject.transform.GetChild(0).GetComponent<SpriteRenderer>().enabled = false;
+                
+                Destroy(hit.collider.gameObject, hit.collider.gameObject.GetComponent<Dot>().audio_source.clip.length);
+
+                score += hit.collider.gameObject.GetComponent<Dot>().point_value;
 
                 score_text.text = "Score: " + score.ToString();
             }
@@ -84,7 +88,7 @@ public class GameLogic : MonoBehaviour
         GameObject new_dot = Instantiate(dot);
 
         int x_pos = Random.Range(0, cam.scaledPixelWidth);
-        int y_pos = Random.Range(0, cam.scaledPixelHeight);
+        int y_pos = Random.Range(0, cam.scaledPixelHeight - 90);
 
         Vector3 spawn_point = new Vector3(x_pos, y_pos, 0);
         spawn_point = cam.ScreenToWorldPoint(spawn_point);
